@@ -1,11 +1,10 @@
 # config.py
 
-# Токен вашего Telegram бота
 TOKEN = '7458927625:AAE_BT0Fub3zDTJPWcg4tKprTJCjQmWhruk'
 
 # Идентификаторы чатов администратора и для отзывов
-ADMIN_CHAT_ID = 6942728774  # Замените на реальный ID администратора
-FEEDBACK_CHAT_ID = 6942728774  # Замените на реальный ID для отзывов
+ADMIN_CHAT_ID = 
+FEEDBACK_CHAT_ID = 
 
 # Курс юаня к рублю
 CURRENCY_RATES = {
