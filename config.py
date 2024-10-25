@@ -1,6 +1,6 @@
 # config.py
 
-TOKEN = '7458927625:AAE_BT0Fub3zDTJPWcg4tKprTJCjQmWhruk'
+TOKEN = ''
 
 # Идентификаторы чатов администратора и для отзывов
 ADMIN_CHAT_ID = 
