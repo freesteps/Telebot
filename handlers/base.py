@@ -1,8 +1,5 @@
 # handlers/base.py
-from telebot import TeleBot, types
-from utils.logger import log_user_action
-from utils.storage import set_state, get_state
-from config import REF_SOURCES
+from telebot import TeleBot
 
 class BaseHandler:
     def __init__(self, bot: TeleBot):

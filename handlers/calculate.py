@@ -1,7 +1,6 @@
 # handlers/calculate.py
 from telebot import types
 from handlers.base import BaseHandler
-from utils.storage import set_state, STATE_CALCULATE_COST
 from config import CURRENCY_RATES
 from utils.logger import log_user_action
 

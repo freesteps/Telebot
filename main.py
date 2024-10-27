@@ -1,16 +1,32 @@
 # main.py
 import telebot
-from telebot import types
 import config
 from utils.logger import logger, log_user_action
-from utils.storage import set_state, get_state, save_user_source, STATE_MAIN_MENU, STATE_ORDER, STATE_ORDER_DETAILS, STATE_TRACK_ORDER, STATE_FEEDBACK, STATE_CALCULATE_COST, STATE_MAIN_INFO, STATE_DOWNLOAD_APP
+from utils.storage import (
+    set_state,
+    get_state,
+    save_user_source,
+    STATE_MAIN_MENU,
+    STATE_ORDER,
+    STATE_ORDER_DETAILS,
+    STATE_TRACK_ORDER,
+    STATE_FEEDBACK,
+    STATE_CALCULATE_COST,
+    STATE_MAIN_INFO,
+    STATE_DOWNLOAD_APP,
+    STATE_AGREEMENT,
+    STATE_TEST_QUESTION_1,
+    STATE_TEST_QUESTION_2
+)
 from handlers import (
     MenuHandler,
     OrderHandler,
     FeedbackHandler,
     CalculateHandler,
     DownloadHandler,
-    MainInfoHandler
+    MainInfoHandler,
+    AgreementHandler,
+    TestHandler
 )
 
 # Настройка логирования
@@ -26,11 +42,16 @@ feedback_handler = FeedbackHandler(bot)
 calculate_handler = CalculateHandler(bot)
 download_handler = DownloadHandler(bot)
 main_info_handler = MainInfoHandler(bot)
+test_handler = TestHandler(bot, menu_handler)  # Передача menu_handler
+agreement_handler = AgreementHandler(bot, test_handler)  # Передача test_handler
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
     user_id = message.chat.id
     username = message.from_user.username
+
+    logger.info(f"Получен /start от пользователя ID: {user_id}, username: {username}")
 
     if not username:
         bot.send_message(
@@ -41,23 +62,33 @@ def start(message):
         return
 
     # Получаем параметр из ссылки (если он передан)
-    ref_source_code = message.text.split(' ')[1] if len(message.text.split()) > 1 else None
+    parts = message.text.split(' ')
+    ref_source_code = parts[1] if len(parts) > 1 else None
     ref_source = config.REF_SOURCES.get(ref_source_code, "Неизвестный источник")  # По умолчанию "Неизвестный источник"
+
+    # Проверяем, новый ли пользователь
+    is_new_user = save_user_source(user_id, username, ref_source)
+
+    if is_new_user:
+        # Новый пользователь, отправляем соглашение
+        agreement_handler.send_agreement(message)
+        return
 
     # Логируем действие
     log_user_action(user_id, username, "старт")
-
-    # Сохраняем информацию о пользователе и источнике (если он не был записан ранее)
-    save_user_source(user_id, username, ref_source)
 
     # Отправляем приветственное сообщение
     bot.send_message(user_id, text=f"Добро пожаловать!\n{config.WORK_SCHEDULE}")
     menu_handler.main_menu(message)
 
+
 @bot.message_handler(content_types=['text', 'photo'])
 def handle_messages(message):
     user_id = message.chat.id
     username = message.from_user.username
+
+    logger.info(
+        f"Получено сообщение от пользователя ID: {user_id}, username: {username}, content_type: {message.content_type}")
 
     if not username:
         bot.send_message(
@@ -77,7 +108,13 @@ def handle_messages(message):
     # Получаем текущее состояние пользователя
     state = get_state(user_id, STATE_MAIN_MENU)
 
-    if message.text == "🔙 Вернуться в главное меню":
+    if state == STATE_AGREEMENT:
+        agreement_handler.handle_accept_agreement(message)
+    elif state == STATE_TEST_QUESTION_1:
+        test_handler.handle_question_1(message)
+    elif state == STATE_TEST_QUESTION_2:
+        test_handler.handle_question_2(message)
+    elif message.text == "🔙 Вернуться в главное меню":
         menu_handler.main_menu(message)
     elif state == STATE_MAIN_MENU:
         handle_main_menu_actions(message)
@@ -98,6 +135,7 @@ def handle_messages(message):
     else:
         logger.warning(f"ID: {user_id} (@{username}): Нераспознанная команда.")
         bot.send_message(message.chat.id, text="На такую команду я не запрограммирован.")
+
 
 def handle_main_menu_actions(message):
     user_id = message.chat.id
@@ -157,7 +195,9 @@ def handle_main_menu_actions(message):
         set_state(user_id, STATE_DOWNLOAD_APP)
     else:
         logger.warning(f"ID: {user_id} (@{username}): Нераспознанное действие в главном меню.")
-        bot.send_message(user_id, "Пожалуйста, выберите одну из предложенных опций.", reply_markup=order_handler.create_back_markup())
+        bot.send_message(user_id, "Пожалуйста, выберите одну из предложенных опций.",
+                         reply_markup=order_handler.create_back_markup())
+
 
 def track_order(message):
     user_id = message.chat.id
@@ -170,6 +210,7 @@ def track_order(message):
     )
     log_user_action(user_id, username, "Отследить заказ")
     set_state(user_id, STATE_MAIN_MENU)
+
 
 if __name__ == "__main__":
     try:

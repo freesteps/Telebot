@@ -12,6 +12,11 @@ STATE_CALCULATE_COST = "calculate_cost"
 STATE_MAIN_INFO = "main_info"
 STATE_DOWNLOAD_APP = "download_app"
 
+# Новые состояния для пользовательского соглашения и теста
+STATE_AGREEMENT = "agreement"
+STATE_TEST_QUESTION_1 = "test_question_1"
+STATE_TEST_QUESTION_2 = "test_question_2"
+
 # Хранилища данных пользователей
 USER_STATES = {}
 USER_ORDERS = {}
@@ -35,6 +40,7 @@ def save_user_source(user_id, username, ref_source):
     """
     Сохраняет источник пользователя в файл.
     Если пользователь уже существует, обновляет его данные.
+    Возвращает True, если пользователь новый, иначе False.
     """
     timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     if not os.path.exists(FILE_PATH):
@@ -56,5 +62,10 @@ def save_user_source(user_id, username, ref_source):
         if not user_found:
             new_entry = f"{username}: {timestamp}, {ref_source}, {user_id}\n"
             lines.append(new_entry)
-        file.seek(0)
-
+            file.seek(0)
+            file.writelines(lines)
+            return True  # Новый пользователь
+        else:
+            file.seek(0)
+            file.writelines(lines)
+            return False  # Уже существующий пользователь

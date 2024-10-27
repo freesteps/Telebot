@@ -5,6 +5,8 @@ from .feedback import FeedbackHandler
 from .calculate import CalculateHandler
 from .download import DownloadHandler
 from .main_info import MainInfoHandler
+from .agreement import AgreementHandler
+from .test import TestHandler  # Добавлено
 
 __all__ = [
     'MenuHandler',
@@ -13,4 +15,6 @@ __all__ = [
     'CalculateHandler',
     'DownloadHandler',
     'MainInfoHandler',
+    'AgreementHandler',  # Добавлено
+    'TestHandler',      # Добавлено
 ]
